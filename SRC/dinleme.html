@@ -322,7 +322,6 @@
     
             </div>
         </section>
-
         <section class="sound-clips">
 
 
@@ -354,6 +353,8 @@
             </div>
 
         </section>
+
+       
         <div allign="center">
             <h4>
                 <p>Dr. Ozan Sarıer</p>
@@ -435,7 +436,7 @@
                     audio.setAttribute('controls', '');
 
                     clipContainer.appendChild(audio);
-                    soundClips.appendChild(clipContainer);
+                    soundClips.insertBefore(clipContainer, soundClips.firstChild);
 
                     audio.controls = true;
                     const blob = new Blob(chunks, { 'type': mediaRecorder.mimeType });
