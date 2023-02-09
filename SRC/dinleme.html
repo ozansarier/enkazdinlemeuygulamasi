@@ -20,6 +20,7 @@
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             font-size: 0.8rem;
+            padding-top: 24px;
         }
 
         .wrapper {
@@ -30,21 +31,21 @@
 
         
         h1 {
-            font-size: 2rem;
+            font-size: 1.5rem;
             text-align: center;
             font-weight: bold;
             padding: auto;
         }
         h2 {
             font-size: 1.25rem;
-            text-align: center;
+            text-align: left;
             font-weight: normal;
             padding: auto;
         }
 
         h3 {
             font-size: 0.75rem;
-            text-align: center;
+            text-align: left;
             font-weight: normal;
             padding: auto;
         }
@@ -57,7 +58,7 @@
         }
         h5 {
             font-size: 0.75rem;
-            text-align: center;
+            text-align: left;
             font-weight: lighter;
             padding: auto;
             color: rgb(27, 23, 169);
@@ -78,6 +79,7 @@
             display: flex;
             flex-direction: row;
             justify-content: space-between;
+            column-gap: 58px;
         }
 
         #buttons button {
@@ -88,7 +90,6 @@
 
         button {
             font-size: 1rem;
-            background: #0088cc;
             text-align: center;
             color: white;
             border: none;
@@ -97,15 +98,27 @@
             border-radius: 12px;
         }
 
-        button:hover,
-        button:focus {
-            box-shadow: inset 0px 0px 10px rgba(255, 255, 255, 1);
-            background: #0ae;
+        button.record {
+            background-color: #6A886F;
         }
 
-        button:active {
+        button.stop {
+            background-color: #D76D6D;
+        }
+
+        button:not(:disabled):hover,
+        button:not(:disabled):focus {
+            box-shadow: rgba(0, 0, 0, 0.5) 3px 2px 10px;
+        }
+
+        button:not(:disabled):active {
             box-shadow: inset 0px 0px 20px rgba(0, 0, 0, 0.5);
             transform: translateY(2px);
+        }
+
+        button:disabled {
+            background-color: gray;
+            cursor: not-allowed;
         }
 
         .sound-clips {
@@ -116,6 +129,7 @@
         section,
         article {
             display: block;
+            margin-bottom: 12px;
         }
 
         .clip {
@@ -184,12 +198,14 @@
         .slider {
             -webkit-appearance: none;
             width: 100%;
-            height: 25px;
+            height: 32px;
             background: #d3d3d3;
+            padding: 10px;
             outline: none;
             opacity: 0.7;
             -webkit-transition: .2s;
             transition: opacity .2s;
+            border-radius: 16px;
         }
 
         .slider:hover {
@@ -199,10 +215,12 @@
         .slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 25px;
-            height: 25px;
-            background: #0088cc;
+            width: 20px;
+            height: 20px;
+            background: #5D7AC5;
             cursor: pointer;
+            border-radius: 10px;
+            
         }
 
         #seviye {
@@ -216,6 +234,18 @@
         }
         #aciklama {
             padding: auto;
+        
+        }
+
+        output {
+            font-weight: bold;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            row-gap: 8px;
+            margin-bottom: 16px;
         }
 
         @media all and (min-width: 800px) {
@@ -223,10 +253,14 @@
             .wrapper {
                 width: 90%;
                 max-width: 1000px;
-                
                 margin: 0 auto;
             }
 
+        }
+        @media all and (max-width: 800px) {
+            .wrapper {
+                padding: 20px;
+            }
         }
     </style>
 
@@ -240,23 +274,14 @@
 
         <section class="main-controls">
             <h1>Enkaz Dinleme Uygulaması</h1>
-            <br>
-            <div id="buttons">
-                <button class="record">Kayıt</button>
-                <button class="stop">Dur</button>
-
-            </div>
-            <br>
+            
             <div id="seviye">
 
                 <!-- Volume Slider'ı -->
                 <form name="myform" oninput="rangevalue.value = range.valueAsNumber">
-
-                    <input class="slider" id="volume" name="range" type="range" step="1" min="1" max="100" value="1">
-
-
                     <h2>Kazanç (Seviye): <output name="rangevalue" for="range1">1</output>X
                     </h2>
+                    <input class="slider" id="volume" name="range" type="range" step="1" min="1" max="100" value="1">                   
 
                 </form>
 
@@ -265,9 +290,10 @@
 
                 <!-- LF Slider'ı -->
                 <form name="myform" oninput="rangevalue.value = range.valueAsNumber">
+                    <h2>Alt Frekans: <output name="rangevalue" for="range1">350</output> Hz</h2>
                     <input class="slider" id="lowFreqValue" name="range" type="range" step="1" min="0" max="1500"
                         value="300">
-                    <h2>Alt Frekans: <output name="rangevalue" for="range1">350</output> Hz</h2>
+                    
                 </form>
                 </p>
             </div>
@@ -276,11 +302,11 @@
 
                 <!-- HF Slider'ı -->
                 <form name="myform" oninput="rangevalue.value = range.valueAsNumber">
-
+                    <h2> Üst Frekans: <output name="rangevalue" for="range1">5000</output> Hz 
+                    </h2>
                     <input class="slider" id="highFreqValue" name="range" type="range" step="1" min="2000" max="22050"
                         value="3400">
-                    <h2> Üst Frekans: <output name="rangevalue" for="range1">5000</output> Hz
-                    </h2>
+                    
 
                 </form>
                 </p>
@@ -289,7 +315,13 @@
 
 
         </section>
-
+        <section>
+            <div id="buttons">
+                <button class="record">Kayıt</button>
+                <button class="stop">Dur</button>
+    
+            </div>
+        </section>
         <section class="sound-clips">
 
 
@@ -321,6 +353,8 @@
             </div>
 
         </section>
+
+       
         <div allign="center">
             <h4>
                 <p>Dr. Ozan Sarıer</p>
@@ -370,7 +404,9 @@
                     mediaRecorder.start();
                     console.log(mediaRecorder.state);
 
-                    record.style.background = "red";
+                    record.style.background = "white";
+                    record.style.border = "#6A886F 2px solid";
+                    record.style.color = "#6A886F";
                     record.textContent = "Yeni Kayıt";
 
                     stop.disabled = false;
@@ -400,7 +436,7 @@
                     audio.setAttribute('controls', '');
 
                     clipContainer.appendChild(audio);
-                    soundClips.appendChild(clipContainer);
+                    soundClips.insertBefore(clipContainer, soundClips.firstChild);
 
                     audio.controls = true;
                     const blob = new Blob(chunks, { 'type': mediaRecorder.mimeType });
