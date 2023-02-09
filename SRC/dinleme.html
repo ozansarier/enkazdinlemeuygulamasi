@@ -128,9 +128,8 @@
 
         section,
         article {
-            display: flex; 
-            flex-direction: column;
-            row-gap: 24px;
+            display: block;
+            margin-bottom: 12px;
         }
 
         .clip {
@@ -245,8 +244,8 @@
         form {
             display: flex;
             flex-direction: column;
-            row-gap: 12px;
-            margin-bottom: 32px;
+            row-gap: 8px;
+            margin-bottom: 16px;
         }
 
         @media all and (min-width: 800px) {
@@ -275,11 +274,7 @@
 
         <section class="main-controls">
             <h1>Enkaz Dinleme Uygulaması</h1>
-            <div id="buttons">
-                <button class="record">Kayıt</button>
-                <button class="stop">Dur</button>
-
-            </div>
+            
             <div id="seviye">
 
                 <!-- Volume Slider'ı -->
@@ -319,6 +314,13 @@
 
 
 
+        </section>
+        <section>
+            <div id="buttons">
+                <button class="record">Kayıt</button>
+                <button class="stop">Dur</button>
+    
+            </div>
         </section>
 
         <section class="sound-clips">
