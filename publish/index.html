@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Enkaz Dinleme Uygulaması</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 0.8rem;
+            padding-top: 24px;
+        }
+
+        .wrapper {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        
+        h1 {
+            font-size: 1.5rem;
+            text-align: center;
+            font-weight: bold;
+            padding: auto;
+        }
+        h2 {
+            font-size: 1.25rem;
+            text-align: left;
+            font-weight: normal;
+            padding: auto;
+        }
+
+        h3 {
+            font-size: 0.75rem;
+            text-align: left;
+            font-weight: normal;
+            padding: auto;
+        }
+
+        h4 {
+            font-size: 0.5rem;
+            text-align: center;
+            font-weight: lighter;
+            padding: auto;
+        }
+        h5 {
+            font-size: 0.75rem;
+            text-align: left;
+            font-weight: lighter;
+            padding: auto;
+            color: rgb(27, 23, 169);
+        }
+
+
+        .main-controls {
+            padding: 0.5rem 0;
+        }
+       
+
+        canvas {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        #buttons {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            column-gap: 58px;
+        }
+
+        #buttons button {
+            font-size: 1rem;
+            padding: 1rem;
+            width: calc(50% - 0.25rem);
+        }
+
+        button {
+            font-size: 1rem;
+            text-align: center;
+            color: white;
+            border: none;
+            transition: all 0.2s;
+            padding: 0.5rem;
+            border-radius: 12px;
+        }
+
+        button.record {
+            background-color: #6A886F;
+        }
+
+        button.stop {
+            background-color: #D76D6D;
+        }
+
+        button:not(:disabled):hover,
+        button:not(:disabled):focus {
+            box-shadow: rgba(0, 0, 0, 0.5) 3px 2px 10px;
+        }
+
+        button:not(:disabled):active {
+            box-shadow: inset 0px 0px 20px rgba(0, 0, 0, 0.5);
+            transform: translateY(2px);
+        }
+
+        button:disabled {
+            background-color: gray;
+            cursor: not-allowed;
+        }
+
+        .sound-clips {
+            flex: 1;
+            overflow: auto;
+        }
+
+        section,
+        article {
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .clip {
+            padding-bottom: 1rem;
+        }
+
+        audio {
+            width: 100%;
+            display: block;
+            margin: 1rem auto 0.5rem;
+        }
+
+        .clip p {
+            display: inline-block;
+            font-size: 1rem;
+        }
+
+        .clip button {
+            font-size: 1rem 1 1;
+            float: right;
+
+        }
+
+        label {
+            font-size: 3rem;
+            position: absolute;
+            top: 2px;
+            right: 3px;
+            z-index: 5;
+            cursor: pointer;
+            background-color: black;
+            border-radius: 10px;
+        }
+
+        input[type=checkbox] {
+            position: absolute;
+            top: -100px;
+        }
+
+        aside {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: translateX(100%);
+            transition: 0.3s all ease-out;
+            background-color: #efefef;
+            padding: 1rem;
+        }
+
+        aside p {
+            font-size: 1.2rem;
+            margin: 0.5rem 0;
+        }
+
+        aside a {
+            color: #666;
+        }
+
+        .clip p {
+            cursor: pointer;
+        }
+
+
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 32px;
+            background: #d3d3d3;
+            padding: 10px;
+            outline: none;
+            opacity: 0.7;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+            border-radius: 16px;
+        }
+
+        .slider:hover {
+            opacity: 1;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #5D7AC5;
+            cursor: pointer;
+            border-radius: 10px;
+            
+        }
+
+        #seviye {
+            padding: auto;
+        }
+        #lf {
+            padding: auto;
+        }
+        #hf {
+            padding: auto;
+        }
+        #aciklama {
+            padding: auto;
+        
+        }
+
+        output {
+            font-weight: bold;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            row-gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        @media all and (min-width: 800px) {
+
+            .wrapper {
+                width: 90%;
+                max-width: 1000px;
+                margin: 0 auto;
+            }
+
+        }
+        @media all and (max-width: 800px) {
+            .wrapper {
+                padding: 20px;
+            }
+        }
+    </style>
+
+<body>
+
+    <div class="wrapper">
+
+        
+            
+        
+
+        <section class="main-controls">
+            <h1>Enkaz Dinleme Uygulaması</h1>
+            
+            <div id="seviye">
+
+                <!-- Volume Slider'ı -->
+                <form name="myform" oninput="rangevalue.value = range.valueAsNumber">
+                    <h2>Kazanç (Seviye): <output name="rangevalue" for="range1">1</output>X
+                    </h2>
+                    <input class="slider" id="volume" name="range" type="range" step="1" min="1" max="100" value="1">                   
+
+                </form>
+
+            </div>
+            <div id="lf" style="padding:0rem">
+
+                <!-- LF Slider'ı -->
+                <form name="myform" oninput="rangevalue.value = range.valueAsNumber">
+                    <h2>Alt Frekans: <output name="rangevalue" for="range1">350</output> Hz</h2>
+                    <input class="slider" id="lowFreqValue" name="range" type="range" step="1" min="0" max="1500"
+                        value="300">
+                    
+                </form>
+                </p>
+            </div>
+            <div id="hf">
+
+
+                <!-- HF Slider'ı -->
+                <form name="myform" oninput="rangevalue.value = range.valueAsNumber">
+                    <h2> Üst Frekans: <output name="rangevalue" for="range1">5000</output> Hz 
+                    </h2>
+                    <input class="slider" id="highFreqValue" name="range" type="range" step="1" min="2000" max="22050"
+                        value="3400">
+                    
+
+                </form>
+                </p>
+            </div>
+
+
+
+        </section>
+        <section>
+            <div id="buttons">
+                <button class="record">Kayıt</button>
+                <button class="stop">Dur</button>
+    
+            </div>
+        </section>
+        <section class="sound-clips">
+
+
+
+            <div id="aciklama" allign="center">
+
+                <p>
+                <h3>- Bu uygulama internet bağlantısı olmadan çalışabilir.</h3>
+                </p>
+                <p>
+                <h3>- Yapılan kayıtlar cihaz dışına yollanmaz.</h3>
+                </p>
+                <p>
+                <h3>- Kazanç ayarıyla sesi yükseltebilirsiniz.</h3>
+                </p>
+                <p>
+                <h3>- Alt ve üst frekans ayarları ile insan sesinin dışındaki sesleri filitreliyebilirsiniz. Başlangıçta ideal bir noktaya ayarlıdır.</h3>
+                </p>
+                <p>
+                <h3>- Mikrofon erişimine izin verdikten sonra cihazınızı sabit bir yere koyup kayıt tuşuna basın. Mümkün
+                    olduğunca sessiz kalın.</h3>
+                </p>
+                <p>
+                <h3>- Dur tuşuna bastıktan sonra yaptığınız kayıt aşağıda gözükecektir.</h3>
+                </p>
+                <p>
+                    <h5>- iOS cihazlardaki sıkıntı giderildi, Emre Doğan'a teşekkürler.</h5>
+                </p>
+            </div>
+
+        </section>
+
+       
+        <div allign="center">
+            <h4>
+                <p>Dr. Ozan Sarıer</p>
+                <p> 2023</p>
+            </h4>
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <script>
+        const record = document.querySelector('.record');
+        const stop = document.querySelector('.stop');
+        const soundClips = document.querySelector('.sound-clips');
+        const canvas = document.querySelector('.visualizer');
+        const mainSection = document.querySelector('.main-controls');
+
+        stop.disabled = true;
+
+        let audioCtx;
+        let audioElement = document.querySelector("audio");
+
+        //Kayıt 
+
+        if (navigator.mediaDevices.getUserMedia) {
+            console.log('getUserMedia supported.');
+
+            const constraints = { audio: true };
+            let chunks = [];
+
+            let onSuccess = function (stream) {
+                const mediaRecorder = new MediaRecorder(stream);
+                if (!audioCtx) {
+                    audioCtx = new AudioContext();
+                }
+
+                record.onclick = function () {
+                    const previousArticle = document.querySelector('article');
+                    if (previousArticle != null) {
+                        previousArticle.remove();
+                    }
+                    mediaRecorder.start();
+                    console.log(mediaRecorder.state);
+
+                    record.style.background = "white";
+                    record.style.border = "#6A886F 2px solid";
+                    record.style.color = "#6A886F";
+                    record.textContent = "Yeni Kayıt";
+
+                    stop.disabled = false;
+                    record.disabled = true;
+                }
+
+                stop.onclick = function () {
+                    mediaRecorder.stop();
+                    console.log(mediaRecorder.state);
+
+                    record.style.background = "";
+                    record.style.color = "";
+                    // mediaRecorder.requestData();
+
+                    stop.disabled = true;
+                    record.disabled = false;
+                }
+
+                mediaRecorder.onstop = function (e) {
+
+                    const clipContainer = document.createElement('article');
+                    const clipLabel = document.createElement('p');
+                    const audio = document.createElement('audio');
+
+
+                    clipContainer.classList.add('clip');
+                    audio.setAttribute('controls', '');
+
+                    clipContainer.appendChild(audio);
+                    soundClips.insertBefore(clipContainer, soundClips.firstChild);
+
+                    audio.controls = true;
+                    const blob = new Blob(chunks, { 'type': mediaRecorder.mimeType });
+                    chunks = [];
+                    const audioURL = window.URL.createObjectURL(blob);
+                    audio.src = audioURL;
+                    console.log("Kayıt Durdu");
+                    connectStuff();
+
+                }
+
+                mediaRecorder.ondataavailable = function (e) {
+                    chunks.push(e.data);
+                }
+            }
+            let onError = function (err) {
+                console.log('The following error occured: ' + err);
+            }
+            navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError);
+        } else {
+            console.log('getUserMedia not supported on your browser!');
+        }
+
+        function connectStuff() {
+
+            audioElement = document.querySelector("audio");
+            const volumeControl = document.querySelector("#volume");
+            const lowFreq = document.querySelector("#lowFreqValue");
+            const hiFreq = document.querySelector("#highFreqValue");
+
+            const track = audioCtx.createMediaElementSource(audioElement);
+            const gainNode = audioCtx.createGain();
+
+            const filterLow = audioCtx.createBiquadFilter();
+            filterLow.type = "highpass";
+            filterLow.frequency.value = 350;
+            const filterHigh = audioCtx.createBiquadFilter();
+            filterHigh.type = "lowpass";
+            filterHigh.frequency.value = 5000;
+
+
+            track.connect(filterLow).connect(filterHigh).connect(gainNode).connect(audioCtx.destination);
+
+
+            volumeControl.addEventListener(
+                "input",
+                () => {
+                    gainNode.gain.value = volumeControl.value;
+                },
+                false
+            );
+            lowFreq.addEventListener(
+                "input",
+                () => {
+                    filterLow.frequency.value = lowFreqValue.value;
+                },
+                false
+            );
+            hiFreq.addEventListener(
+                "input",
+                () => {
+                    filterHigh.frequency.value = highFreqValue.value;
+                },
+                false
+            );
+        }
+       
+
+    </script>
+</body>
+
+</html>
