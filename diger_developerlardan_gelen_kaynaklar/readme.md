@@ -1,0 +1,1 @@
+# Diğer developerlardan gelen kaynaklar
