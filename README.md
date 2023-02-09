@@ -11,7 +11,7 @@ Dizayn Hedefleri:
 - Basit arayüze sahip olması
 - Tracking ve reklam içermemesi
 - İzinsiz data toplamaması
-- Tek bir HTML dosyası altında toplamak
+- Tek bir HTML dosyası altında toplamak (Mecburi değil)
 
 
 Mevcut Kabiliyetler:
