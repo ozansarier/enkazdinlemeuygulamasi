@@ -29,13 +29,14 @@
             flex-direction: column;
         }
 
-        
+
         h1 {
             font-size: 1.5rem;
             text-align: center;
             font-weight: bold;
             padding: auto;
         }
+
         h2 {
             font-size: 1.25rem;
             text-align: left;
@@ -56,6 +57,7 @@
             font-weight: lighter;
             padding: auto;
         }
+
         h5 {
             font-size: 0.75rem;
             text-align: left;
@@ -63,12 +65,19 @@
             padding: auto;
             color: rgb(27, 23, 169);
         }
+        h6 {
+            font-size: 0.75rem;
+            text-align: left;
+            font-weight: lighter;
+            padding: auto;
+            color: rgb(248, 7, 7);
+        }
 
 
         .main-controls {
             padding: 0.5rem 0;
         }
-       
+
 
         canvas {
             display: block;
@@ -220,21 +229,24 @@
             background: #5D7AC5;
             cursor: pointer;
             border-radius: 10px;
-            
+
         }
 
         #seviye {
             padding: auto;
         }
+
         #lf {
             padding: auto;
         }
+
         #hf {
             padding: auto;
         }
+
         #aciklama {
             padding: auto;
-        
+
         }
 
         output {
@@ -257,6 +269,7 @@
             }
 
         }
+
         @media all and (max-width: 800px) {
             .wrapper {
                 padding: 20px;
@@ -268,20 +281,20 @@
 
     <div class="wrapper">
 
-        
-            
-        
+
+
+
 
         <section class="main-controls">
             <h1>Enkaz Dinleme Uygulaması</h1>
-            
+
             <div id="seviye">
 
                 <!-- Volume Slider'ı -->
                 <form name="myform" oninput="rangevalue.value = range.valueAsNumber">
                     <h2>Kazanç (Seviye): <output name="rangevalue" for="range1">1</output>X
                     </h2>
-                    <input class="slider" id="volume" name="range" type="range" step="1" min="1" max="100" value="1">                   
+                    <input class="slider" id="volume" name="range" type="range" step="1" min="1" max="100" value="1">
 
                 </form>
 
@@ -293,7 +306,7 @@
                     <h2>Alt Frekans: <output name="rangevalue" for="range1">350</output> Hz</h2>
                     <input class="slider" id="lowFreqValue" name="range" type="range" step="1" min="0" max="1500"
                         value="300">
-                    
+
                 </form>
                 </p>
             </div>
@@ -302,11 +315,11 @@
 
                 <!-- HF Slider'ı -->
                 <form name="myform" oninput="rangevalue.value = range.valueAsNumber">
-                    <h2> Üst Frekans: <output name="rangevalue" for="range1">5000</output> Hz 
+                    <h2> Üst Frekans: <output name="rangevalue" for="range1">5000</output> Hz
                     </h2>
                     <input class="slider" id="highFreqValue" name="range" type="range" step="1" min="2000" max="22050"
                         value="3400">
-                    
+
 
                 </form>
                 </p>
@@ -319,7 +332,7 @@
             <div id="buttons">
                 <button class="record">Kayıt</button>
                 <button class="stop">Dur</button>
-    
+
             </div>
         </section>
         <section class="sound-clips">
@@ -338,7 +351,8 @@
                 <h3>- Kazanç ayarıyla sesi yükseltebilirsiniz.</h3>
                 </p>
                 <p>
-                <h3>- Alt ve üst frekans ayarları ile insan sesinin dışındaki sesleri filitreliyebilirsiniz. Başlangıçta ideal bir noktaya ayarlıdır.</h3>
+                <h3>- Alt ve üst frekans ayarları ile insan sesinin dışındaki sesleri filitreliyebilirsiniz. Başlangıçta
+                    ideal bir noktaya ayarlıdır.</h3>
                 </p>
                 <p>
                 <h3>- Mikrofon erişimine izin verdikten sonra cihazınızı sabit bir yere koyup kayıt tuşuna basın. Mümkün
@@ -348,19 +362,20 @@
                 <h3>- Dur tuşuna bastıktan sonra yaptığınız kayıt aşağıda gözükecektir.</h3>
                 </p>
                 <p>
-                    <h5>- iOS cihazlardaki sıkıntı giderildi, Emre Doğan'a teşekkürler.</h5>
-                    <h5>- Yeni arayüz için,  Ahmet Enes Keçeci'ye teşekkürler.</h5>
+                <h6>- Bazı Android cihazlarda yaşanan kısık sesleri alamama problemi giderildi. Ses kalitesi arttırıldı.</h6>    
+                <h5>- iOS cihazlardaki sıkıntı giderildi, Emre Doğan'a teşekkürler.</h5>
+                <h5>- Yeni arayüz için, Ahmet Enes Keçeci'ye teşekkürler.</h5>
                 </p>
             </div>
 
         </section>
 
-       
+
         <div allign="center">
             <h4>
 
-                <p>Uygulama aktif olarak güncellenmektedir v0.3</p>
-                <p>Son güncelleme 02:15 10 Şubat 2023</p>
+                <p>Uygulama aktif olarak güncellenmektedir v0.5</p>
+                <p>Son güncelleme 05:33 10 Şubat 2023</p>
                 <a href="https://github.com/ozansarier/enkazdinlemeuygulamasi"> Kaynak ve Proje Sayfası</a>
                 <p>Dr. Ozan Sarıer</p>
                 <p> 2023</p>
@@ -376,6 +391,19 @@
 
 
     <script>
+
+        let isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        let iosValue = 0;
+        if (isIOS) {
+            iosValue = true;
+        } 
+        else {
+           iosValue = false;
+        }
+       
+
+        console.log(iosValue);
+
         const record = document.querySelector('.record');
         const stop = document.querySelector('.stop');
         const soundClips = document.querySelector('.sound-clips');
@@ -390,13 +418,24 @@
         //Kayıt 
 
         if (navigator.mediaDevices.getUserMedia) {
-            console.log('getUserMedia supported.');
+            //console.log('getUserMedia supported.');
 
-            const constraints = { audio: true };
+            const constraints = {
+                audio: {
+                    channels: 1,
+                    autoGainControl: iosValue,
+
+                    echoCancellation: iosValue,
+                    noiseSuppression: iosValue
+
+                }
+            };
             let chunks = [];
 
             let onSuccess = function (stream) {
+
                 const mediaRecorder = new MediaRecorder(stream);
+
                 if (!audioCtx) {
                     audioCtx = new AudioContext();
                 }
@@ -407,7 +446,7 @@
                         previousArticle.remove();
                     }
                     mediaRecorder.start();
-                    console.log(mediaRecorder.state);
+                    //console.log(mediaRecorder.state);
 
                     record.style.background = "white";
                     record.style.border = "#6A886F 2px solid";
@@ -444,6 +483,7 @@
                     soundClips.insertBefore(clipContainer, soundClips.firstChild);
 
                     audio.controls = true;
+
                     const blob = new Blob(chunks, { 'type': mediaRecorder.mimeType });
                     chunks = [];
                     const audioURL = window.URL.createObjectURL(blob);
@@ -481,9 +521,11 @@
             const filterHigh = audioCtx.createBiquadFilter();
             filterHigh.type = "lowpass";
             filterHigh.frequency.value = 5000;
+            const pannerOptions = { pan: 0.5 };
+            const panner = new StereoPannerNode(audioCtx, pannerOptions);
 
 
-            track.connect(filterLow).connect(filterHigh).connect(gainNode).connect(audioCtx.destination);
+            track.connect(filterLow).connect(filterHigh).connect(gainNode).connect(panner).connect(audioCtx.destination);
 
 
             volumeControl.addEventListener(
@@ -508,7 +550,7 @@
                 false
             );
         }
-       
+
 
     </script>
 </body>
