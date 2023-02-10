@@ -577,7 +577,7 @@
             volumeControl.addEventListener(
                 "input",
                 () => {
-                    gainNode.gain.value=50;
+                    gainNode.gain.value= volumeControl.value;
 
                 },
                 false
