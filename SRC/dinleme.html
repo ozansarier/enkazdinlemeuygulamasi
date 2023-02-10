@@ -615,7 +615,7 @@
                     audioElement.addEventListener("timeupdate", () => {
                         spectroCtx.clearRect(0, 0, spectroCanvas.width, spectroCanvas.height);
                         spectroCtx.putImageData(imageData, 0, 0);
-                        let currentPosition = spectroCanvas.width * (audioElement.currentTime / audioElement.duration);
+                        let currentPosition = spectroCanvas.width * (audioElement.currentTime / audioPreloadData.duration);
                         spectroCtx.fillStyle = "white";
                         spectroCtx.fillRect(currentPosition, 0, 1, spectroCanvas.height);
                     })
