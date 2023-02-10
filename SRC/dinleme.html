@@ -79,10 +79,12 @@
         }
 
 
-        canvas {
+     canvas {
             display: block;
             margin-bottom: 0.5rem;
-        }
+           width:70%;
+           height:10rem;
+        } 
 
         #buttons {
             display: flex;
@@ -130,10 +132,10 @@
             cursor: not-allowed;
         }
 
-        .sound-clips {
+        /* .sound-clips {
             flex: 1;
             overflow: auto;
-        }
+        } */
 
         section,
         article {
@@ -311,6 +313,7 @@
                 </p>
             </div>
             <div id="hf">
+                
 
 
                 <!-- HF Slider'ı -->
@@ -328,6 +331,7 @@
 
 
         </section>
+
         <section>
             <div id="buttons">
                 <button class="record">Kayıt</button>
@@ -335,12 +339,15 @@
 
             </div>
         </section>
+
+
         <section class="sound-clips">
 
+        <canvas  id="analyzerCanvas"></canvas>
+           
 
 
             <div id="aciklama" allign="center">
-
                 <p>
                 <h3>- Bu uygulama internet bağlantısı olmadan çalışabilir.</h3>
                 </p>
@@ -514,6 +521,8 @@
 
             const track = audioCtx.createMediaElementSource(audioElement);
             const gainNode = audioCtx.createGain();
+               // waveform analyser creation
+               const analyser = audioCtx.createAnalyser();
 
             const filterLow = audioCtx.createBiquadFilter();
             filterLow.type = "highpass";
@@ -524,14 +533,52 @@
             const pannerOptions = { pan: 0.5 };
             const panner = new StereoPannerNode(audioCtx, pannerOptions);
 
+//waveform analyser zincire eklendi
+            track.connect(filterLow).connect(filterHigh).connect(gainNode).connect(panner).connect(analyser).connect(audioCtx.destination);
 
-            track.connect(filterLow).connect(filterHigh).connect(gainNode).connect(panner).connect(audioCtx.destination);
+          //waveform analyser logic burda başladı
+          const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        
+         function draw() {
+          requestAnimationFrame(draw);
+
+        
+          analyser.getByteFrequencyData(dataArray);
+
+            //frekansları canvasta görüntüleme logic'i
+            const canvas = document.querySelector("#analyzerCanvas");
+            const ctx = canvas.getContext("2d");
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          for ( let  i = 0; i < dataArray.length; i++) {
+            const  barHeight = dataArray[i];
+            const barWidth = canvas.width / dataArray.length;
+
+            // frekans 80-8000 aralığındaysa canvas'taki o aralığı kırmızıyla çiz
+            if (i > 80 && i < 8000) {
+              ctx.fillStyle = "red";
+            } else {
+              ctx.fillStyle = "black";
+            }
+
+            ctx.fillRect(
+              i * barWidth,
+              canvas.height - barHeight,
+              barWidth,
+              barHeight
+            );
+          }
+        }
+        draw();
+// waveform analyzer logic'i burda bitti
 
 
             volumeControl.addEventListener(
                 "input",
                 () => {
-                    gainNode.gain.value = volumeControl.value;
+                    gainNode.gain.value=50;
+
                 },
                 false
             );
@@ -539,6 +586,8 @@
                 "input",
                 () => {
                     filterLow.frequency.value = lowFreqValue.value;
+                    console.log("lowfreq");
+
                 },
                 false
             );
@@ -554,5 +603,5 @@
 
     </script>
 </body>
-
+</head>
 </html>
