@@ -386,21 +386,19 @@
 
     </div>
 
-
-
-
-
     <script>
+
+        //console.log("Açılıs low " + lowFreqValue.value);
+        //console.log("Açılıs high " + highFreqValue.value);
 
         let isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         let iosValue = 0;
         if (isIOS) {
             iosValue = true;
-        } 
+        }
         else {
            iosValue = false;
         }
-       
 
         console.log(iosValue);
 
@@ -415,7 +413,7 @@
         let audioCtx;
         let audioElement = document.querySelector("audio");
 
-        //Kayıt 
+        //Kayıt
 
         if (navigator.mediaDevices.getUserMedia) {
             //console.log('getUserMedia supported.');
@@ -441,6 +439,7 @@
                 }
 
                 record.onclick = function () {
+
                     const previousArticle = document.querySelector('article');
                     if (previousArticle != null) {
                         previousArticle.remove();
@@ -467,6 +466,7 @@
 
                     stop.disabled = true;
                     record.disabled = false;
+
                 }
 
                 mediaRecorder.onstop = function (e) {
@@ -524,35 +524,56 @@
             const pannerOptions = { pan: 0.5 };
             const panner = new StereoPannerNode(audioCtx, pannerOptions);
 
-
             track.connect(filterLow).connect(filterHigh).connect(gainNode).connect(panner).connect(audioCtx.destination);
 
+            var vol_slider = document.getElementById("volume");
+            vol_slider.addEventListener("input", function() {
+              gainNode.gain.value = vol_slider.value;
+            });
 
-            volumeControl.addEventListener(
-                "input",
-                () => {
-                    gainNode.gain.value = volumeControl.value;
-                },
-                false
-            );
-            lowFreq.addEventListener(
-                "input",
-                () => {
-                    filterLow.frequency.value = lowFreqValue.value;
-                },
-                false
-            );
-            hiFreq.addEventListener(
-                "input",
-                () => {
-                    filterHigh.frequency.value = highFreqValue.value;
-                },
-                false
-            );
+            var lf_slider = document.getElementById("lowFreqValue");
+            lf_slider.addEventListener("input", function() {
+              filterLow.frequency.value = lf_slider.value;
+            });
+
+            var hf_slider = document.getElementById("highFreqValue");
+            hf_slider.addEventListener("input", function() {
+              filterHigh.frequency.value = hf_slider.value;
+            });
+
+            let values = getValues();
+            //console.log("array: " + values);
+
+            gainNode.gain.value = values[0];
+            filterLow.frequency.value = values[1];
+            filterHigh.frequency.value = values[2];
+
         }
 
+        function getValues(){
+
+            var vol_slider = document.getElementById("volume");
+            vol_slider.addEventListener("input", function() {
+              //console.log("Volume Slider value: " + vol_slider.value);
+            });
+
+            var lf_slider = document.getElementById("lowFreqValue");
+            lf_slider.addEventListener("input", function() {
+              //console.log("LF Slider value: " + lf_slider.value);
+            });
+
+            var hf_slider = document.getElementById("highFreqValue");
+            hf_slider.addEventListener("input", function() {
+              //console.log("HF Slider value: " + hf_slider.value);
+            });
+
+            let valuesArray = new Array(vol_slider.value, lf_slider.value, hf_slider.value);
+
+            return valuesArray;
+        }
 
     </script>
+
 </body>
 
 </html>
