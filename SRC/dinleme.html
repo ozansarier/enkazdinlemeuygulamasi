@@ -65,6 +65,7 @@
             padding: auto;
             color: rgb(27, 23, 169);
         }
+
         h6 {
             font-size: 0.75rem;
             text-align: left;
@@ -82,6 +83,10 @@
         canvas {
             display: block;
             margin-bottom: 0.5rem;
+        }
+
+        #spectrogram {
+            background-color: black;
         }
 
         #buttons {
@@ -109,6 +114,11 @@
 
         button.record {
             background-color: #6A886F;
+        }
+
+        #spektrogram-button {
+            background-color: #6A886F;
+            margin-bottom: 5px;
         }
 
         button.stop {
@@ -260,6 +270,10 @@
             margin-bottom: 16px;
         }
 
+        .display-none {
+            display: none;
+        }
+
         @media all and (min-width: 800px) {
 
             .wrapper {
@@ -336,6 +350,10 @@
             </div>
         </section>
         <section class="sound-clips">
+            <div id="spectrogram-wrapper" class="display-none">
+                <button id="spektrogram-button">Spektrogram</button>
+                <canvas id="spectrogram"></canvas>
+            </div>
 
 
 
@@ -362,7 +380,8 @@
                 <h3>- Dur tuşuna bastıktan sonra yaptığınız kayıt aşağıda gözükecektir.</h3>
                 </p>
                 <p>
-                <h6>- Bazı Android cihazlarda yaşanan kısık sesleri alamama problemi giderildi. Ses kalitesi arttırıldı.</h6>    
+                <h6>- Bazı Android cihazlarda yaşanan kısık sesleri alamama problemi giderildi. Ses kalitesi arttırıldı.
+                </h6>
                 <h5>- iOS cihazlardaki sıkıntı giderildi, Emre Doğan'a teşekkürler.</h5>
                 <h5>- Yeni arayüz için, Ahmet Enes Keçeci'ye teşekkürler.</h5>
                 </p>
@@ -384,12 +403,15 @@
         </div>
 
 
+
+
     </div>
 
-    <script>
 
-        //console.log("Açılıs low " + lowFreqValue.value);
-        //console.log("Açılıs high " + highFreqValue.value);
+
+
+
+    <script>
 
         let isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         let iosValue = 0;
@@ -397,8 +419,10 @@
             iosValue = true;
         }
         else {
-           iosValue = false;
+            iosValue = false;
         }
+
+
 
         console.log(iosValue);
 
@@ -408,12 +432,20 @@
         const canvas = document.querySelector('.visualizer');
         const mainSection = document.querySelector('.main-controls');
 
+        const spectrogramWrapper = document.getElementById("spectrogram-wrapper");
+        const spectroCanvas = document.getElementById("spectrogram");
+        const spectroButton = document.getElementById("spektrogram-button");
+        spectroCanvas.width = soundClips.offsetWidth - 20;
+        spectroCanvas.height = 250;
+        const spectroCtx = spectroCanvas.getContext('2d');
+        let spectroData;
+
         stop.disabled = true;
 
         let audioCtx;
         let audioElement = document.querySelector("audio");
 
-        //Kayıt
+        //Kayıt 
 
         if (navigator.mediaDevices.getUserMedia) {
             //console.log('getUserMedia supported.');
@@ -439,7 +471,6 @@
                 }
 
                 record.onclick = function () {
-
                     const previousArticle = document.querySelector('article');
                     if (previousArticle != null) {
                         previousArticle.remove();
@@ -466,14 +497,78 @@
 
                     stop.disabled = true;
                     record.disabled = false;
-
                 }
 
-                mediaRecorder.onstop = function (e) {
+                mediaRecorder.onstop = async function (e) {
+                    spectrogramWrapper.classList.remove("display-none");
+
+                    const getWaveForm = async (waveformUrl) => {
+                        const resp = await fetch(waveformUrl);
+                        const waveDataBuffer = await resp.arrayBuffer();
+                        const audioBuffer = await audioCtx.decodeAudioData(waveDataBuffer);
+                        return audioBuffer
+                    }
+
+                    const config = {
+                        fftResolution: 4096,
+                        smoothingTimeConstant: 0.1,
+                        processorBufferSize: 2048,
+                    }
+
+                    const processWaveForm = async (buffer) => {
+                        const offlineCtx = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+                        const source = offlineCtx.createBufferSource();
+                        source.buffer = buffer;
+                        source.channelCount = buffer.numberOfChannels;
+                        const splitter = offlineCtx.createChannelSplitter(source.channelCount);
+                        const generalAnalyzer = offlineCtx.createAnalyser();
+                        generalAnalyzer.fftSize = config.fftResolution;
+                        generalAnalyzer.smoothingTimeConstant = config.smoothingTimeConstant;
+
+                        const channelDbRanges = [];
+                        const channelFFtBuffers = [];
+                        const analyzers = [];
+
+                        for (let i = 0; i < source.channelCount; i++) {
+                            channelFFtBuffers[i] = new Uint8Array((buffer.length / config.processorBufferSize) * (config.fftResolution / 2));
+                            analyzers[i] = offlineCtx.createAnalyser();
+                            analyzers[i].smoothingTimeConstant = config.smoothingTimeConstant;
+                            analyzers[i].fftSize = config.fftResolution;
+
+                            splitter.connect(analyzers[i], i)
+                            channelDbRanges.push({
+                                minDecibels: analyzers[i].minDecibels,
+                                maxDecibels: analyzers[i].maxDecibels,
+                            });
+                        }
+                        offlineCtx.createScriptProcessor = offlineCtx.createScriptProcessor || offlineCtx.createJavaScriptNode;
+                        const processor = offlineCtx.createScriptProcessor(config.processorBufferSize, 1, 1);
+                        let offset = 0;
+                        processor.onaudioprocess = (ev) => {
+                            for (let i = 0; i < source.channelCount; i += 1) {
+                                const freqData = new Uint8Array(channelFFtBuffers[i].buffer, offset, analyzers[i].frequencyBinCount);
+                                analyzers[i].getByteFrequencyData(freqData);
+                            }
+                            offset += generalAnalyzer.frequencyBinCount
+                        }
+                        source.connect(splitter);
+                        source.connect(processor);
+                        processor.connect(offlineCtx.destination);
+                        source.connect(generalAnalyzer);
+                        source.start(0);
+                        await offlineCtx.startRendering();
+                        return {
+                            duration: buffer.duration,
+                            channels: channelFFtBuffers,
+                            stride: config.fftResolution / 2,
+                            tickCount: Math.ceil(buffer.length / config.processorBufferSize),
+                        }
+                    }
 
                     const clipContainer = document.createElement('article');
                     const clipLabel = document.createElement('p');
                     const audio = document.createElement('audio');
+
 
 
                     clipContainer.classList.add('clip');
@@ -488,8 +583,66 @@
                     chunks = [];
                     const audioURL = window.URL.createObjectURL(blob);
                     audio.src = audioURL;
+                    console.log(audio.src);
                     console.log("Kayıt Durdu");
+
+
+                    let audioPreloadData = await getWaveForm(audio.src);
+                    audioPreloadData = await processWaveForm(audioPreloadData);
+                    spectroCtx.clearRect(0, 0, spectroCanvas.width, spectroCanvas.height);
+                    for (let x = 0; x < audioPreloadData.tickCount; x++) {
+                        for (let y = 0; y < audioPreloadData.stride; y++) {
+
+                            spectroCtx.fillStyle = `hsl(0, 100%, ${(audioPreloadData.channels[0][y + (x * audioPreloadData.stride)] / 255) * 100}%)`;
+                            spectroCtx.fillRect(x * (spectroCanvas.width / audioPreloadData.tickCount), spectroCanvas.height - (y * spectroCanvas.height / audioPreloadData.stride), spectroCanvas.width / audioPreloadData.tickCount, spectroCanvas.height / audioPreloadData.stride);
+                        }
+
+                    }
+                    const imageData = await spectroCtx.getImageData(0, 0, spectroCanvas.width, spectroCanvas.height);
+
+
+
+
+
+                    console.log(imageData);
+
+
+
+
                     connectStuff();
+                    timeHeadAnimation();
+
+                    audioElement.addEventListener("timeupdate", () => {
+                        spectroCtx.clearRect(0, 0, spectroCanvas.width, spectroCanvas.height);
+                        spectroCtx.putImageData(imageData, 0, 0);
+                        let currentPosition = spectroCanvas.width * (audioElement.currentTime / audioPreloadData.duration);
+                        spectroCtx.fillStyle = "white";
+                        spectroCtx.fillRect(currentPosition, 0, 1, spectroCanvas.height);
+                    })
+
+                    function timeHeadAnimation() {
+                        try {
+
+                            let audioElement = document.querySelector("audio");
+                            if (isPlaying(audioElement)) {
+                                let currentPosition = spectroCanvas.width * (audioElement.currentTime / audioPreloadData.duration);
+
+                                spectroCtx.clearRect(0, 0, spectroCanvas.width, spectroCanvas.height);
+                                spectroCtx.putImageData(imageData, 0, 0);
+                                spectroCtx.fillStyle = "white";
+                                spectroCtx.fillRect(currentPosition, 0, 1, spectroCanvas.height);
+                            }
+                        }
+                        catch (err) {
+
+                        }
+
+                        requestAnimationFrame(timeHeadAnimation);
+                    }
+
+                    spectroButton.addEventListener("click", () => {
+                        spectroCanvas.classList.toggle("display-none")
+                    })
 
                 }
 
@@ -497,6 +650,8 @@
                     chunks.push(e.data);
                 }
             }
+            const isPlaying = (audelem) => { return !audelem.paused; }
+
             let onError = function (err) {
                 console.log('The following error occured: ' + err);
             }
@@ -504,6 +659,8 @@
         } else {
             console.log('getUserMedia not supported on your browser!');
         }
+
+
 
         function connectStuff() {
 
@@ -524,56 +681,35 @@
             const pannerOptions = { pan: 0.5 };
             const panner = new StereoPannerNode(audioCtx, pannerOptions);
 
+
             track.connect(filterLow).connect(filterHigh).connect(gainNode).connect(panner).connect(audioCtx.destination);
 
-            var vol_slider = document.getElementById("volume");
-            vol_slider.addEventListener("input", function() {
-              gainNode.gain.value = vol_slider.value;
-            });
 
-            var lf_slider = document.getElementById("lowFreqValue");
-            lf_slider.addEventListener("input", function() {
-              filterLow.frequency.value = lf_slider.value;
-            });
-
-            var hf_slider = document.getElementById("highFreqValue");
-            hf_slider.addEventListener("input", function() {
-              filterHigh.frequency.value = hf_slider.value;
-            });
-
-            let values = getValues();
-            //console.log("array: " + values);
-
-            gainNode.gain.value = values[0];
-            filterLow.frequency.value = values[1];
-            filterHigh.frequency.value = values[2];
-
+            volumeControl.addEventListener(
+                "input",
+                () => {
+                    gainNode.gain.value = volumeControl.value;
+                },
+                false
+            );
+            lowFreq.addEventListener(
+                "input",
+                () => {
+                    filterLow.frequency.value = lowFreqValue.value;
+                },
+                false
+            );
+            hiFreq.addEventListener(
+                "input",
+                () => {
+                    filterHigh.frequency.value = highFreqValue.value;
+                },
+                false
+            );
         }
 
-        function getValues(){
-
-            var vol_slider = document.getElementById("volume");
-            vol_slider.addEventListener("input", function() {
-              //console.log("Volume Slider value: " + vol_slider.value);
-            });
-
-            var lf_slider = document.getElementById("lowFreqValue");
-            lf_slider.addEventListener("input", function() {
-              //console.log("LF Slider value: " + lf_slider.value);
-            });
-
-            var hf_slider = document.getElementById("highFreqValue");
-            hf_slider.addEventListener("input", function() {
-              //console.log("HF Slider value: " + hf_slider.value);
-            });
-
-            let valuesArray = new Array(vol_slider.value, lf_slider.value, hf_slider.value);
-
-            return valuesArray;
-        }
 
     </script>
-
 </body>
 
 </html>
