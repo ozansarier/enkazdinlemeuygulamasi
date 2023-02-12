@@ -274,6 +274,8 @@
             display: none;
         }
 
+       
+
         @media all and (min-width: 800px) {
 
             .wrapper {
@@ -288,6 +290,79 @@
             .wrapper {
                 padding: 20px;
             }
+        }
+
+        /* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.sliderSwitch {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.sliderSwitch:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .sliderSwitch {
+  background-color: #2196F3;
+}
+
+input:focus + .sliderSwitch {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .sliderSwitch:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.sliderSwitch.round {
+  border-radius: 34px;
+}
+
+.sliderSwitch.round:before {
+  border-radius: 50%;
+}
+.warning {
+            font-weight: bold;
+            color :rgb(248, 7, 7);
+        }
+
+        .realtimeMonitoringText {
+            font-size: 1.50rem;
+            font-weight: normal;
+            padding: auto !important;
         }
     </style>
 
@@ -306,7 +381,7 @@
 
                 <!-- Volume Slider'ı -->
                 <form name="myform" oninput="rangevalue.value = range.valueAsNumber">
-                    <h2>Kazanç (Seviye): <output name="rangevalue" for="range1">1</output>X
+                    <h2>Kazanç (Seviye): <output name="rangevalue" for="range1">1</output>X <span class="warning">(Dikkatli YÜKSELTİN!)</span>
                     </h2>
                     <input class="slider" id="volume" name="range" type="range" step="1" min="1" max="100" value="1">
 
@@ -319,7 +394,7 @@
                 <form name="myform" oninput="rangevalue.value = range.valueAsNumber">
                     <h2>Alt Frekans: <output name="rangevalue" for="range1">350</output> Hz</h2>
                     <input class="slider" id="lowFreqValue" name="range" type="range" step="1" min="0" max="1500"
-                        value="300">
+                        value="350">
 
                 </form>
                 </p>
@@ -332,7 +407,7 @@
                     <h2> Üst Frekans: <output name="rangevalue" for="range1">5000</output> Hz
                     </h2>
                     <input class="slider" id="highFreqValue" name="range" type="range" step="1" min="2000" max="22050"
-                        value="3400">
+                        value="5000">
 
 
                 </form>
@@ -343,10 +418,17 @@
 
         </section>
         <section>
+            <!-- Rounded switch -->
+            
+           <span class="realtimeMonitoringText">Sesleri Anlık Dinle</span> 
+                <label class="switch">
+                  <input type="checkbox" id="realtimeMonitoring" >
+                  <span class="sliderSwitch "></span>
+                </label> 
+           <span class="warning">(Kulaklık ile tavsiye edilir)</span>
             <div id="buttons">
                 <button class="record">Kayıt</button>
                 <button class="stop">Dur</button>
-
             </div>
         </section>
         <section class="sound-clips">
@@ -432,6 +514,10 @@
         const canvas = document.querySelector('.visualizer');
         const mainSection = document.querySelector('.main-controls');
 
+
+        const realtimeMonitoring = document.querySelector('#realtimeMonitoring');
+        
+
         const spectrogramWrapper = document.getElementById("spectrogram-wrapper");
         const spectroCanvas = document.getElementById("spectrogram");
         const spectroButton = document.getElementById("spektrogram-button");
@@ -465,12 +551,33 @@
             let onSuccess = function (stream) {
 
                 const mediaRecorder = new MediaRecorder(stream);
+               
 
                 if (!audioCtx) {
                     audioCtx = new AudioContext();
                 }
 
+
+                var mediaStreamSource = audioCtx.createMediaStreamSource( stream );
+                realtimeMonitoring.onclick = function(){
+                    //Special Thanks to https://developer.chrome.com/blog/live-web-audio-input-enabled/
+                    //https://www.w3schools.com/howto/howto_css_switch.asp
+                    if( realtimeMonitoring.checked==true){
+                        
+                        connectStuff(mediaStreamSource);
+                        record.disabled =true;
+                        stop.disabled=true;
+                    }else{
+                        mediaStreamSource.disconnect(); 
+                        record.disabled =false;
+                        stop.disabled=true;
+                    }
+
+                    
+                }
+
                 record.onclick = function () {
+                    realtimeMonitoring.disabled = true;
                     const previousArticle = document.querySelector('article');
                     if (previousArticle != null) {
                         previousArticle.remove();
@@ -488,6 +595,7 @@
                 }
 
                 stop.onclick = function () {
+                    realtimeMonitoring.disabled = false;
                     mediaRecorder.stop();
                     console.log(mediaRecorder.state);
 
@@ -661,54 +769,58 @@
         }
 
 
+ 
 
-        function connectStuff() {
-
+        function connectStuff(track) {
             audioElement = document.querySelector("audio");
-            const volumeControl = document.querySelector("#volume");
-            const lowFreq = document.querySelector("#lowFreqValue");
-            const hiFreq = document.querySelector("#highFreqValue");
+const volumeControl = document.querySelector("#volume");
+const lowFreq = document.querySelector("#lowFreqValue");
+const hiFreq = document.querySelector("#highFreqValue"); 
+const gainNode = audioCtx.createGain();
+    if(track==null)
+        track = audioCtx.createMediaElementSource(audioElement);
+const filterLow = audioCtx.createBiquadFilter();
+filterLow.type = "highpass";
+filterLow.frequency.value = 350;
+const filterHigh = audioCtx.createBiquadFilter();
+filterHigh.type = "lowpass";
+filterHigh.frequency.value = 5000;
+const pannerOptions = { pan: 0.5 };
+const panner = new StereoPannerNode(audioCtx, pannerOptions);
 
-            const track = audioCtx.createMediaElementSource(audioElement);
-            const gainNode = audioCtx.createGain();
+if(volumeControl.value!=1)
+    gainNode.gain.value = volumeControl.value;
 
-            const filterLow = audioCtx.createBiquadFilter();
-            filterLow.type = "highpass";
-            filterLow.frequency.value = 350;
-            const filterHigh = audioCtx.createBiquadFilter();
-            filterHigh.type = "lowpass";
-            filterHigh.frequency.value = 5000;
-            const pannerOptions = { pan: 0.5 };
-            const panner = new StereoPannerNode(audioCtx, pannerOptions);
+if(lowFreq.value!=350)
+    filterLow.frequency.value = lowFreqValue.value;
+if(hiFreq.value!=5000)
+    filterHigh.frequency.value = highFreqValue.value;    
 
-
-            track.connect(filterLow).connect(filterHigh).connect(gainNode).connect(panner).connect(audioCtx.destination);
-
-
-            volumeControl.addEventListener(
-                "input",
-                () => {
-                    gainNode.gain.value = volumeControl.value;
-                },
-                false
-            );
-            lowFreq.addEventListener(
-                "input",
-                () => {
-                    filterLow.frequency.value = lowFreqValue.value;
-                },
-                false
-            );
-            hiFreq.addEventListener(
-                "input",
-                () => {
-                    filterHigh.frequency.value = highFreqValue.value;
-                },
-                false
-            );
-        }
+track.connect(filterLow).connect(filterHigh).connect(gainNode).connect(panner).connect(audioCtx.destination);
 
 
+volumeControl.addEventListener(
+    "input",
+    () => {
+        gainNode.gain.value = volumeControl.value;
+    },
+    false
+);
+lowFreq.addEventListener(
+    "input",
+    () => {
+        filterLow.frequency.value = lowFreqValue.value;
+    },
+    false
+);
+hiFreq.addEventListener(
+    "input",
+    () => {
+        filterHigh.frequency.value = highFreqValue.value;
+    },
+    false
+);
+}
     </script>
 </body>
 
